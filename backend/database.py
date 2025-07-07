@@ -5,3 +5,5 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client.feedback_system
 users_collection = db.users
+# existing users_collection
+feedbacks_collection = db.feedbacks

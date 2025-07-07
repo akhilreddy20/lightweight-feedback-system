@@ -1,16 +1,28 @@
-from fastapi import APIRouter, HTTPException
-from models import UserCreate, UserLogin
+from fastapi import APIRouter, HTTPException, Depends, Request, Header
+from fastapi.security import OAuth2PasswordBearer
+from models import UserCreate, UserLogin, TokenData
 from database import users_collection
 from utils import hash_password, verify_password, create_token
+from jose import jwt, JWTError
 
 auth_router = APIRouter()
+
+# 🔐 Use a dummy tokenUrl because we handle login ourselves
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# Secret must match the one used in create_token()
+SECRET_KEY = "secret-key"  # 🔐 Replace with env var in production
+ALGORITHM = "HS256"
+
+
+
 
 @auth_router.post("/register")
 async def register_user(user: UserCreate):
     print("Incoming registration:", user.dict())
 
-    # ✅ Step 2: MongoDB sanity check
     try:
+        # ✅ Check MongoDB is alive
         ping_result = await users_collection.database.command("ping")
         print("✅ MongoDB Ping Successful:", ping_result)
     except Exception as ping_error:
@@ -18,12 +30,14 @@ async def register_user(user: UserCreate):
         raise HTTPException(status_code=500, detail="MongoDB is not reachable")
 
     try:
+        # ✅ Check for existing user
         existing_user = await users_collection.find_one({"username": user.username})
         print("Existing user check:", existing_user)
 
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists")
 
+        # ✅ Hash password
         hashed_pw = hash_password(user.password)
         print("Hashed password created")
 
@@ -50,7 +64,26 @@ async def login(user: UserLogin):
 
         token = create_token({"username": user.username, "role": db_user["role"]})
         return {"token": token, "role": db_user["role"]}
+
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Login failed due to server error")
+
+
+# ✅ Used in protected routes to extract the user from JWT token
+async def get_current_user(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        username = payload.get("username")
+        role = payload.get("role")
+        if not username or not role:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+        return {"username": username, "role": role}
+    except JWTError as e:
+        print("❌ Token Decode Error:", e)
+        raise HTTPException(status_code=401, detail="Token decode failed")

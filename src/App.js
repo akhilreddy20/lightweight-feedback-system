@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import ManagerDashboard from "./pages/ManagerDashboard";
@@ -10,7 +10,20 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Login + Register */}
         <Route path="/" element={<Home />} />
+
+        {/* Employee Dashboard */}
+        <Route
+          path="/employee-dashboard"
+          element={
+            <ProtectedRoute role="employee">
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Manager Dashboard - list only */}
         <Route
           path="/manager-dashboard"
           element={
@@ -19,11 +32,13 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Manager Dashboard - with selected employee */}
         <Route
-          path="/employee-dashboard"
+          path="/manager-dashboard/:employeeId"
           element={
-            <ProtectedRoute role="employee">
-              <EmployeeDashboard />
+            <ProtectedRoute role="manager">
+              <ManagerDashboard />
             </ProtectedRoute>
           }
         />
