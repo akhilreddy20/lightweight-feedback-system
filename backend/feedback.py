@@ -4,6 +4,8 @@ from models import FeedbackCreate, FeedbackInDB
 from auth import get_current_user
 from bson import ObjectId
 from bson.errors import InvalidId
+from fastapi import Body
+
 
 router = APIRouter(prefix="/feedback")
 
@@ -73,7 +75,17 @@ async def get_my_feedback(user=Depends(get_current_user)):
     if user["role"] != "employee":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    feedbacks = await feedbacks_collection.find({"employee_id": {"$exists": True}, "employee_username": user["username"]}).sort("timestamp", -1).to_list(100)
+    # 🔍 Get this employee's ID from the users_collection
+    employee = await users_collection.find_one({"username": user["username"]})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    employee_id = str(employee["_id"])
+
+    # ✅ Fetch feedbacks by employee_id
+    feedbacks = await feedbacks_collection.find(
+        {"employee_id": employee_id}
+    ).sort("timestamp", -1).to_list(100)
 
     for fb in feedbacks:
         fb["_id"] = str(fb["_id"])
@@ -81,3 +93,50 @@ async def get_my_feedback(user=Depends(get_current_user)):
             fb["timestamp"] = fb["timestamp"].isoformat()
 
     return feedbacks
+
+
+
+@router.patch("/{feedback_id}/acknowledge")
+async def acknowledge_feedback(feedback_id: str, user=Depends(get_current_user)):
+    if user["role"] != "employee":
+        raise HTTPException(status_code=403, detail="Only employees can acknowledge feedback")
+
+    try:
+        obj_id = ObjectId(feedback_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid feedback ID")
+
+    result = await feedbacks_collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"acknowledged": True}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback not found or already acknowledged")
+
+    return {"status": "acknowledged"}
+
+
+@router.patch("/{feedback_id}/edit")
+async def edit_feedback(feedback_id: str, data: dict = Body(...), user=Depends(get_current_user)):
+    if user["role"] != "manager":
+        raise HTTPException(status_code=403, detail="Only managers can edit feedback")
+
+    try:
+        obj_id = ObjectId(feedback_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid feedback ID")
+
+    result = await feedbacks_collection.update_one(
+        {"_id": obj_id, "manager_username": user["username"]},
+        {"$set": {
+            "strengths": data.get("strengths"),
+            "areas_to_improve": data.get("areas_to_improve"),
+            "sentiment": data.get("sentiment"),
+        }}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback not found or not owned by you")
+
+    return {"status": "updated"}
