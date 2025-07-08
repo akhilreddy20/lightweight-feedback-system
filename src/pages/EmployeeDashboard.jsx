@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import Navbar from "../components/Navbar";
 
 const EmployeeDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -35,7 +36,9 @@ const EmployeeDashboard = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div>
+      <Navbar role="Employee" />
+      <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Your Feedback Timeline</h1>
       {feedbacks.length === 0 ? (
         <p>No feedback yet.</p>
@@ -64,6 +67,7 @@ const EmployeeDashboard = () => {
           ))}
         </ul>
       )}
+      </div>
     </div>
   );
 };

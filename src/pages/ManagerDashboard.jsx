@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import FeedbackForm from "../components/FeedbackForm";
+import Navbar from "../components/Navbar";
 
 const ManagerDashboard = () => {
   const { employeeId } = useParams();
@@ -31,7 +32,9 @@ const ManagerDashboard = () => {
   };
 
   return (
-    <div className="p-8">
+    <div>
+      <Navbar role="Manager" />
+      <div className="p-8">
       <h1 className="text-3xl font-bold mb-4">Manager Dashboard</h1>
 
       <p className="mb-4">Click on a team member to submit feedback:</p>
@@ -57,7 +60,9 @@ const ManagerDashboard = () => {
           <FeedbackForm employeeId={employeeId} />
         </div>
       )}
+      </div>
     </div>
+    
   );
 };
 
