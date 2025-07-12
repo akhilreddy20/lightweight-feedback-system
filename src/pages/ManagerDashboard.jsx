@@ -12,7 +12,7 @@ const ManagerDashboard = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/feedback/team", {
+        const res = await axios.get("https://lightweight-feedback-system-backend.onrender.com/feedback/team", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
