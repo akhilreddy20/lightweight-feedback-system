@@ -4,3 +4,4 @@ uvicorn
 motor
 python-jose
 passlib[bcrypt]
+python-dotenv

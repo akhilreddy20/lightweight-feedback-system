@@ -23,4 +23,4 @@ app.include_router(feedback_router)  # ✅ Now /feedback and /feedback/team will
 # ✅ Add this root route for Render check
 @app.get("/")
 def root():
-    return {"message": "✅ Backend (Lightweight Feedback System) is running successfully!"}
+    return {"✅ Backend (Lightweight Feedback System) is running successfully!"}
