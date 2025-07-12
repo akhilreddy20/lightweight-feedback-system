@@ -7,7 +7,7 @@ const EmployeeDashboard = () => {
 
   const fetchFeedback = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/feedback/", {
+      const res = await axios.get("https://lightweight-feedback-system-backend.onrender.com/feedback/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
