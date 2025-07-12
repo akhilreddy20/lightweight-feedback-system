@@ -20,3 +20,7 @@ print("🚀 FastAPI app is starting...")
 app.include_router(auth_router)
 app.include_router(feedback_router)  # ✅ Now /feedback and /feedback/team will work
 
+# ✅ Add this root route for Render check
+@app.get("/")
+def root():
+    return {"message": "✅ Backend (Lightweight Feedback System) is running successfully!"}
