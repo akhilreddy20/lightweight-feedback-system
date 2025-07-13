@@ -20,7 +20,7 @@ const EmployeeDashboard = () => {
 
   const acknowledge = async (id) => {
     try {
-      await axios.patch(`http://localhost:8000/feedback/${id}/acknowledge`, {}, {
+      await axios.patch(`https://lightweight-feedback-system-backend.onrender.com/feedback/${id}/acknowledge`, {}, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
