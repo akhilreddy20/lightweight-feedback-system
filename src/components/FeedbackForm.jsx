@@ -46,7 +46,7 @@ const FeedbackForm = ({ employeeId }) => {
 
     try {
       await axios.post(
-        `http://localhost:8000/feedback/${employeeId}`,
+        `https://lightweight-feedback-system-backend.onrender.com/feedback/${employeeId}`,
         form,
         {
           headers: {
@@ -84,7 +84,7 @@ const FeedbackForm = ({ employeeId }) => {
     e.preventDefault();
     try {
       await axios.patch(
-        `http://localhost:8000/feedback/${editing._id}/edit`,
+        `https://lightweight-feedback-system-backend.onrender.com/feedback/${editing._id}/edit`,
         editForm,
         {
           headers: {
