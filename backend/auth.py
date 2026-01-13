@@ -10,9 +10,7 @@ auth_router = APIRouter()
 # 🔐 Use a dummy tokenUrl because we handle login ourselves
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# Secret must match the one used in create_token()
-SECRET_KEY = "secret-key"  # 🔐 Replace with env var in production
-ALGORITHM = "HS256"
+
 
 
 
@@ -22,7 +20,6 @@ async def register_user(user: UserCreate):
     print("Incoming registration:", user.dict())
 
     try:
-        # ✅ Check MongoDB is alive
         ping_result = await users_collection.database.command("ping")
         print("✅ MongoDB Ping Successful:", ping_result)
     except Exception as ping_error:
