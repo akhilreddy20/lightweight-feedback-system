@@ -3,8 +3,7 @@ from jose import jwt
 from datetime import datetime, timedelta
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "secret-key"
-ALGORITHM = "HS256"
+
 
 def hash_password(password):
     return pwd_context.hash(password)
