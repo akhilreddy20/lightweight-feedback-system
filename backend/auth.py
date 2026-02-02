@@ -7,7 +7,7 @@ from jose import jwt, JWTError
 
 auth_router = APIRouter()
 
-# 🔐 Use a dummy tokenUrl because we handle login ourselves
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
@@ -27,14 +27,13 @@ async def register_user(user: UserCreate):
         raise HTTPException(status_code=500, detail="MongoDB is not reachable")
 
     try:
-        # ✅ Check for existing user
         existing_user = await users_collection.find_one({"username": user.username})
         print("Existing user check:", existing_user)
 
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already exists")
 
-        # ✅ Hash password
+
         hashed_pw = hash_password(user.password)
         print("Hashed password created")
 
@@ -68,7 +67,7 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=500, detail="Login failed due to server error")
 
 
-# ✅ Used in protected routes to extract the user from JWT token
+
 async def get_current_user(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid token")
