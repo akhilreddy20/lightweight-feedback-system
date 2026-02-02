@@ -69,23 +69,3 @@ const ManagerDashboard = () => {
 export default ManagerDashboard;
 
 
-
-
-
-/*import React from "react";
-import FeedbackForm from "../components/FeedbackForm";
-import { useParams } from "react-router-dom";
-
-const ManagerDashboard = () => {
-  const {employeeId} = useParams();
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">Manager Dashboard</h1>
-      <p>View your team’s feedback overview and submit new feedback here.</p>
-      <FeedbackForm employeeId={employeeId} />
-    </div>
-  );
-};
-
-export default ManagerDashboard;
-*/
