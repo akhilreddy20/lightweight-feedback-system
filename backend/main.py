@@ -9,7 +9,7 @@ app = FastAPI()
 # ✅ Allow requests from frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://lightweight-feedback-system-5clk.onrender.com"],  # React app origin
+    allow_origins=["https://lightweight-feedback-system-5clk.onrender.com"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,9 +18,9 @@ app.add_middleware(
 print("🚀 FastAPI app is starting...")
 
 app.include_router(auth_router)
-app.include_router(feedback_router)  # ✅ Now /feedback and /feedback/team will work
+app.include_router(feedback_router)  
 
-# ✅ Add this root route for Render check
+
 @app.get("/")
 def root():
     return {"✅ Backend (Lightweight Feedback System) is running successfully!"}
