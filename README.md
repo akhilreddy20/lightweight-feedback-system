@@ -1,70 +1,60 @@
-# Getting Started with Create React App
+# Lightweight Feedback System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[![CI](https://github.com/akhilreddy20/lightweight-feedback-system/actions/workflows/ci.yml/badge.svg)](https://github.com/akhilreddy20/lightweight-feedback-system/actions/workflows/ci.yml)
 
-## Available Scripts
+Managers give structured feedback to their team (strengths, areas to improve, sentiment). Employees see their own feedback history and acknowledge each item.
 
-In the project directory, you can run:
+**Live demo:** https://lightweight-feedback-system-5clk.onrender.com
 
-### `npm start`
+**Stack:** React (CRA) · FastAPI · MongoDB (Motor, async) · JWT auth · bcrypt · Docker · GitHub Actions
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Register and log in as **manager** or **employee** (JWT, bcrypt-hashed passwords)
+- Managers: see the team, submit feedback, edit their own feedback
+- Employees: read their own history (newest first) and acknowledge items
+- Role checks on every endpoint, plus per-record checks (employees can only read and acknowledge their own feedback)
+- Input validation with Pydantic: roles and sentiment are enums, with length limits on text fields
 
-### `npm test`
+## Running locally
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# API
+cd backend
+cp .env.example .env                 # set MONGO_URL and JWT_SECRET
+pip install -r requirements.txt
+uvicorn main:app --reload            # http://localhost:8000  (docs at /docs)
 
-### `npm run build`
+# UI
+REACT_APP_API_URL=http://localhost:8000 npm start   # http://localhost:3000
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Or with Docker: `docker build -t feedback-api ./backend && docker run -p 8000:8000 --env-file backend/.env feedback-api`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Env var | Purpose |
+|---|---|
+| `MONGO_URL` | MongoDB connection string |
+| `JWT_SECRET` | Token signing key. If unset, a random key is used and users are signed out on every restart. |
+| `TOKEN_TTL_MINUTES` | Token lifetime (default 60) |
+| `CORS_ORIGINS` | Comma-separated allowed origins |
+| `REACT_APP_API_URL` | Backend URL for the UI |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Tests
 
-### `npm run eject`
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest -q
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The API tests use an in-memory MongoDB mock (`mongomock-motor`). They cover registration and login status codes, validation, token checks, role permissions, and per-record access (an employee can't read or acknowledge someone else's feedback). CI runs them, the frontend build and a Docker build on every push.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Changelog: bugs fixed
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- **Login always failed:** `SECRET_KEY`/`ALGORITHM` were referenced but never defined, so creating a token raised `NameError`. Token config now lives in `config.py`.
+- **Registration broke on fresh installs:** `passlib` crashes with `bcrypt>=4.1`. Switched to `bcrypt` directly; existing hashes still verify. Dependencies are now pinned.
+- **Wrong status codes:** a broad `except Exception` turned 400/401 into 500. Removed.
+- **Passwords in logs:** request bodies were printed during registration. Removed, and a test asserts the password never appears in logs.
+- **Anyone could acknowledge anyone's feedback:** acknowledgement is now limited to the feedback's owner.
+- **History sorting:** sorted by a `timestamp` that was never written. It's now set on creation.
+- The backend URL was hard-coded in 8 places. It's now a single `REACT_APP_API_URL` setting.

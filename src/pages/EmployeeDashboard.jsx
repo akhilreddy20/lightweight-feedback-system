@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
+import { API_URL } from '../api';
 
 const EmployeeDashboard = () => {
   const [feedbacks, setFeedbacks] = useState([]);
 
   const fetchFeedback = async () => {
     try {
-      const res = await axios.get("https://lightweight-feedback-system-backend.onrender.com/feedback/", {
+      const res = await axios.get(`${API_URL}/feedback/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -20,7 +21,7 @@ const EmployeeDashboard = () => {
 
   const acknowledge = async (id) => {
     try {
-      await axios.patch(`https://lightweight-feedback-system-backend.onrender.com/feedback/${id}/acknowledge`, {}, {
+      await axios.patch(`${API_URL}/feedback/${id}/acknowledge`, {}, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

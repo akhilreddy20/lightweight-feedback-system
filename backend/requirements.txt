@@ -1,7 +1,7 @@
-fastapi
-pydantic
-uvicorn
-motor
-python-jose
-passlib[bcrypt]
-python-dotenv
+fastapi==0.115.12
+pydantic==2.11.7
+uvicorn[standard]==0.34.3
+motor==3.7.1
+python-jose[cryptography]==3.5.0
+bcrypt==4.3.0
+python-dotenv==1.1.1
