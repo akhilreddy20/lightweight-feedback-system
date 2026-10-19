@@ -17,7 +17,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @auth_router.post("/register")
 async def register_user(user: UserCreate):
-    print("Incoming registration:", user.dict())
 
     try:
         ping_result = await users_collection.database.command("ping")
@@ -35,13 +34,11 @@ async def register_user(user: UserCreate):
 
 
         hashed_pw = hash_password(user.password)
-        print("Hashed password created")
 
         user_dict = user.dict()
         user_dict["password"] = hashed_pw
 
         result = await users_collection.insert_one(user_dict)
-        print("Inserted user with ID:", str(result.inserted_id))
 
         return {"msg": "User created successfully"}
 
