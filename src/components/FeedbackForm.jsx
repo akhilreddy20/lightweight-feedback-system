@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_URL } from '../api';
 
 const FeedbackForm = ({ employeeId }) => {
   const [form, setForm] = useState({
@@ -17,7 +18,7 @@ const FeedbackForm = ({ employeeId }) => {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get(`https://lightweight-feedback-system-backend.onrender.com/feedback/${employeeId}`, {
+      const res = await axios.get(`${API_URL}/feedback/${employeeId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setHistory(res.data);
@@ -46,7 +47,7 @@ const FeedbackForm = ({ employeeId }) => {
 
     try {
       await axios.post(
-        `https://lightweight-feedback-system-backend.onrender.com/feedback/${employeeId}`,
+        `${API_URL}/feedback/${employeeId}`,
         form,
         {
           headers: {
@@ -84,7 +85,7 @@ const FeedbackForm = ({ employeeId }) => {
     e.preventDefault();
     try {
       await axios.patch(
-        `https://lightweight-feedback-system-backend.onrender.com/feedback/${editing._id}/edit`,
+        `${API_URL}/feedback/${editing._id}/edit`,
         editForm,
         {
           headers: {

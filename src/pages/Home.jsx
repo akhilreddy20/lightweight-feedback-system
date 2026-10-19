@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from '../api';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("login"); // Toggle between 'login' and 'register'
@@ -8,15 +9,19 @@ const Home = () => {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
+  // FastAPI returns a string for HTTP errors and a list for validation (422) errors.
+  const errorText = (detail) =>
+    Array.isArray(detail) ? detail.map((d) => d.msg).join(", ") : detail || "Request failed";
+
   const handleRegister = async () => {
     try {
-      const res = await fetch("https://lightweight-feedback-system-backend.onrender.com/register", {
+      const res = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
       });
       const data = await res.json();
-      setMessage(res.ok ? "✅ " + data.msg : "❌ " + data.detail);
+      setMessage(res.ok ? "✅ " + data.msg : "❌ " + errorText(data.detail));
     } catch {
       setMessage("❌ Registration failed.");
     }
@@ -24,7 +29,7 @@ const Home = () => {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("https://lightweight-feedback-system-backend.onrender.com/login", {
+      const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
@@ -44,7 +49,7 @@ const Home = () => {
         }
         
       } else {
-        setMessage("❌ " + data.detail);
+        setMessage("❌ " + errorText(data.detail));
       }
     } catch {
       setMessage("❌ Login failed.");

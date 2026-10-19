@@ -1,11 +1,16 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
+
+Role = Literal["manager", "employee"]
+Sentiment = Literal["positive", "neutral", "negative"]
+
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
-    role: str  # 'manager' or 'employee'
+    username: str = Field(min_length=3, max_length=50, pattern=r"^[A-Za-z0-9_.-]+$")
+    password: str = Field(min_length=8, max_length=72)  # bcrypt limit
+    role: Role
+
 
 class UserLogin(BaseModel):
     username: str
@@ -13,15 +18,15 @@ class UserLogin(BaseModel):
 
 
 class FeedbackCreate(BaseModel):
-    strengths: str
-    areas_to_improve: str
-    sentiment: str  # positive / neutral / negative
+    strengths: str = Field(min_length=1, max_length=2000)
+    areas_to_improve: str = Field(min_length=1, max_length=2000)
+    sentiment: Sentiment
+
+
+class FeedbackUpdate(FeedbackCreate):
+    pass
+
 
 class FeedbackInDB(FeedbackCreate):
     manager_username: str
     employee_id: str
-
-
-class TokenData(BaseModel):
-    username: str
-    role: str

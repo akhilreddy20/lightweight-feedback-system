@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
-from database import feedbacks_collection, users_collection
-from models import FeedbackCreate, FeedbackInDB
-from auth import get_current_user
+from datetime import datetime, timezone
+
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import Body
+from fastapi import APIRouter, Depends, HTTPException
+
+from auth import get_current_user
+from database import feedbacks_collection, users_collection
+from models import FeedbackCreate, FeedbackInDB, FeedbackUpdate
 
 
 router = APIRouter(prefix="/feedback")
 
 
-# ✅ Add this new route
 @router.get("/team")
 async def get_team(user=Depends(get_current_user)):
     if user["role"] != "manager":
@@ -39,12 +40,15 @@ async def add_feedback(employee_id: str, fb: FeedbackCreate, user=Depends(get_cu
         raise HTTPException(status_code=404, detail="Employee not found")
 
     doc = FeedbackInDB(
-        **fb.dict(),
+        **fb.model_dump(),
         manager_username=user["username"],
-        employee_id=employee_id
-    )
-    await feedbacks_collection.insert_one(doc.dict())
-    return {"status": "ok"}
+        employee_id=employee_id,
+    ).model_dump()
+    # Lists are sorted by timestamp, which was previously never set.
+    doc["timestamp"] = datetime.now(timezone.utc)
+    doc["acknowledged"] = False
+    result = await feedbacks_collection.insert_one(doc)
+    return {"status": "ok", "id": str(result.inserted_id)}
 
 
 # Get feedback history (visible to employee or their manager)
@@ -75,14 +79,12 @@ async def get_my_feedback(user=Depends(get_current_user)):
     if user["role"] != "employee":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # 🔍 Get this employee's ID from the users_collection
     employee = await users_collection.find_one({"username": user["username"]})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 
     employee_id = str(employee["_id"])
 
-    # ✅ Fetch feedbacks by employee_id
     feedbacks = await feedbacks_collection.find(
         {"employee_id": employee_id}
     ).sort("timestamp", -1).to_list(100)
@@ -106,9 +108,14 @@ async def acknowledge_feedback(feedback_id: str, user=Depends(get_current_user))
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid feedback ID")
 
+    employee = await users_collection.find_one({"username": user["username"]})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    # Scope to the caller: previously any employee could acknowledge anyone's feedback.
     result = await feedbacks_collection.update_one(
-        {"_id": obj_id},
-        {"$set": {"acknowledged": True}}
+        {"_id": obj_id, "employee_id": str(employee["_id"])},
+        {"$set": {"acknowledged": True, "acknowledged_at": datetime.now(timezone.utc)}},
     )
 
     if result.modified_count == 0:
@@ -118,7 +125,7 @@ async def acknowledge_feedback(feedback_id: str, user=Depends(get_current_user))
 
 
 @router.patch("/{feedback_id}/edit")
-async def edit_feedback(feedback_id: str, data: dict = Body(...), user=Depends(get_current_user)):
+async def edit_feedback(feedback_id: str, data: FeedbackUpdate, user=Depends(get_current_user)):
     if user["role"] != "manager":
         raise HTTPException(status_code=403, detail="Only managers can edit feedback")
 
@@ -129,14 +136,10 @@ async def edit_feedback(feedback_id: str, data: dict = Body(...), user=Depends(g
 
     result = await feedbacks_collection.update_one(
         {"_id": obj_id, "manager_username": user["username"]},
-        {"$set": {
-            "strengths": data.get("strengths"),
-            "areas_to_improve": data.get("areas_to_improve"),
-            "sentiment": data.get("sentiment"),
-        }}
+        {"$set": {**data.model_dump(), "updated_at": datetime.now(timezone.utc)}},
     )
 
-    if result.modified_count == 0:
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Feedback not found or not owned by you")
 
     return {"status": "updated"}

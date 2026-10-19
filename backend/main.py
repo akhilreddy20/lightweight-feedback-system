@@ -1,26 +1,33 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from auth import auth_router
-from feedback import router as feedback_router  # ✅ Import the feedback routes
+from config import CORS_ORIGINS
+from feedback import router as feedback_router
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
-app = FastAPI()
+app = FastAPI(title="Lightweight Feedback System")
 
-# ✅ Allow requests from frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://lightweight-feedback-system-5clk.onrender.com"],  
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-print("🚀 FastAPI app is starting...")
-
 app.include_router(auth_router)
-app.include_router(feedback_router)  
+app.include_router(feedback_router)
 
 
 @app.get("/")
 def root():
-    return {"✅ Backend (Lightweight Feedback System) is running successfully!"}
+    return {"status": "ok", "service": "lightweight-feedback-system"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

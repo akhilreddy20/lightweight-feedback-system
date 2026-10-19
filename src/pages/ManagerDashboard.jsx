@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import FeedbackForm from "../components/FeedbackForm";
 import Navbar from "../components/Navbar";
+import { API_URL } from '../api';
 
 const ManagerDashboard = () => {
   const { employeeId } = useParams();
@@ -12,7 +13,7 @@ const ManagerDashboard = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await axios.get("https://lightweight-feedback-system-backend.onrender.com/feedback/team", {
+        const res = await axios.get(`${API_URL}/feedback/team`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
